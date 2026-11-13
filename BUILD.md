@@ -20,14 +20,8 @@
 - **Node.js ≥ 20** и npm ≥ 10
 - Интернет-соединение — electron-builder скачивает дистрибутив Electron, NSIS и вспомогательные утилиты в кеш (`~/.cache/electron`, `~/.cache/electron-builder`)
 
-Дополнительно для сборки **Windows на Linux**: **Wine** ( wine64 ≥ 6) — нужен утилите rcedit для прописывания иконки, версии и метаданных в `.exe`:
-
-```bash
-# Debian/Ubuntu/Mint
-sudo apt install wine64
-```
-
 Сборка Windows **на Windows** дополнительных инструментов не требует.
+Сборка Windows **на Linux** тоже работает без Wine — но см. нюанс с иконкой `.exe` ниже.
 
 ---
 
@@ -94,12 +88,23 @@ npm run pack:win
 
 ### Вариант 2. Кросс-сборка на Linux
 
+**Без Wine (проверено):** портативный `.exe` — установка не требуется вообще:
+
 ```bash
-sudo apt install wine64
+npm run pack:win:portable
+# dist/Bash Manager-1.0.0-x64-portable.exe (~110 МБ)
+```
+
+**Полный комплект** (установщик NSIS + portable) собирается на Linux, только если Wine работает корректно, включая 32-битную часть (ассистированному установщику нужно запустить себя под Wine, чтобы извлечь `uninstall.exe`):
+
+```bash
+sudo dpkg --add-architecture i386
+sudo apt update
+sudo apt install wine32:i386 wine64
 npm run pack:win
 ```
 
-Wine используется только на этапе пропатчивания `.exe` (иконка, версия, название продукта). NSIS и остальное electron-builder скачивает сам. Если Wine не установлен, сборка прервётся с ошибкой rcedit — в этом случае собирайте на Windows или в CI.
+Если Wine установлен без 32-битной части, сборка установщика падает с ошибками вида `wow64 mode` / `failed to load ntdll.dll` — в этом случае используйте portable-вариант или собирайте на Windows/в CI.
 
 ---
 
@@ -176,8 +181,9 @@ jobs:
 
 | Проблема | Решение |
 |---|---|
-| `Error: Cannot find module 'app-builder-bin'` | `npm install` выполнен частично — переустановите зависимости |
-| Сборка Windows на Linux падает на rcedit | Установите `wine64`; либо собирайте на Windows/в CI |
+| `node-gyp does not support cross-compiling native modules` | Уже решено в проекте: `.npmrc` → `omit=optional` (ssh2 не тянет нативный `cpu-features`) и `build.npmRebuild: false`. Если всплыла — проверьте, что `.npmrc` на месте |
+| Ошибки Wine `wow64` / `failed to load ntdll.dll` на этапе rcedit | Установлен неполный Wine (нет 32-битной части) — поставьте `wine32:i386`, либо оставьте `signAndEditExecutable: false` |
+| Сборка Windows на Linux падает на rcedit | См. выше; либо собирайте на Windows/в CI |
 | SmartScreen блокирует установщик | Ожидаемо без кода-подписи → «Подробнее» → «Выполнить в любом случае», либо купите сертификат |
 | AppImage не запускается | `chmod +x`; на некоторых системах нужен пакет `libfuse2` (`sudo apt install libfuse2`) |
 | Долгий первый запуск сборки | Идёт загрузка Electron/NSIS в кеш — последующие сборки быстрые |

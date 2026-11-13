@@ -19,6 +19,7 @@
     "pack": "electron-builder",
     "pack:linux": "electron-builder --linux",
     "pack:win": "electron-builder --win",
+    "pack:win:portable": "electron-builder --win portable",
     "test": "node test/vault.test.js && node test/repo.test.js && node test/i18n.test.js"
   },
   "build": {
@@ -34,15 +35,23 @@
       "package.json"
     ],
     "asar": true,
+    "npmRebuild": false,
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "category": "Development;Utility;",
       "icon": "build/icon.png"
     },
     "win": {
-      "target": ["nsis", "portable"],
+      "target": [
+        "nsis",
+        "portable"
+      ],
       "icon": "build/icon.png",
-      "artifactName": "${productName}-${version}-${arch}-setup.${ext}"
+      "artifactName": "${productName}-${version}-${arch}-setup.${ext}",
+      "signAndEditExecutable": false
     },
     "nsis": {
       "oneClick": false,
