@@ -438,9 +438,9 @@ function register(win) {
 
   // ---------- SSH ----------
 
-  handle('ssh:test', async ({ group, file, ssh }) => {
+  handle('ssh:test', async ({ group, file, ssh: sshBlock }) => {
     requireRoot();
-    let block = ssh;
+    let block = sshBlock;
     if (group && file) {
       const { meta, groupMeta } = await repo.readScript(state.rootDir, group, file);
       block = effectiveSsh(meta, groupMeta);
