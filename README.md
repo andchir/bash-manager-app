@@ -2,6 +2,8 @@
 
 Графическое приложение для управления Bash-скриптами: группы, редактор с подсветкой, запуск **локально** и на **удалённых Linux-серверах по SSH**, с **шифрованием SSH-доступов** мастер-паролем.
 
+![screenshot](https://github.com/andchir/bash-manager-app/blob/main/docs/screenshot1_ru.png?raw=true)
+
 Стек: **Electron · Node.js · TailwindCSS · ssh2** (vanilla JS, без фреймворков — работает полностью офлайн).
 
 ---
