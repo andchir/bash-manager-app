@@ -1,7 +1,7 @@
 {
   "name": "bash-manager",
   "productName": "Bash Manager",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Приложение для управления, редактирования и запуска Bash-скриптов локально и по SSH",
   "author": {
     "name": "Andrei",
