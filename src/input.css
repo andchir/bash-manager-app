@@ -174,9 +174,14 @@ html.light .tok-fn      { color: #b45309; }
   background: rgba(16, 185, 129, 0.25);
 }
 
+/* ---------- Вывод скрипта: выделение текста (body запрещает select-none) ---------- */
+.output-text {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* ---------- Терминал вывода ---------- */
-.ansi-fg-30 { color: #4b5563; } .ansi-fg-31 { color: #f87171; }
-.ansi-fg-32 { color: #4ade80; } .ansi-fg-33 { color: #facc15; }
+.ansi-fg-30 { color: #4b5563; } .ansi-fg-31 { color: #f87171; }.ansi-fg-32 { color: #4ade80; } .ansi-fg-33 { color: #facc15; }
 .ansi-fg-34 { color: #60a5fa; } .ansi-fg-35 { color: #e879f9; }
 .ansi-fg-36 { color: #22d3ee; } .ansi-fg-37 { color: #e5e7eb; }
 .ansi-fg-90 { color: #6b7280; } .ansi-fg-91 { color: #fca5a5; }

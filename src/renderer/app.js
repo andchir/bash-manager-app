@@ -112,6 +112,7 @@ const App = (() => {
   };
 
   let editor = null;
+  let metaDirty = false; // менялась ли форма меты с момента сохранения
   let ansi = null;
   const outputBox = document.createElement('div');
   outputBox.className = 'font-mono text-[13px] leading-5 text-slate-200 whitespace-pre-wrap break-words';
@@ -545,7 +546,7 @@ const App = (() => {
       return;
     }
     const meta = S.doc?.meta || {};
-    const dirty = editor?.isDirty();
+    const dirty = !!editor?.isDirty() || metaDirty;
     el.innerHTML = `
       <div class="flex-none flex items-center gap-2 px-4 py-2.5 border-b border-[var(--border)] bg-[var(--panel)] flex-wrap">
         <button id="btn-back" data-action="back-to-list" title="${esc(t('common.backToList'))}"
@@ -554,7 +555,7 @@ const App = (() => {
         <span class="text-[11px] text-[var(--muted)] truncate">${esc(S.activeScript)}</span>
         <span id="dirty-dot" class="text-amber-400 text-sm ${dirty ? '' : 'hidden'}">●</span>
         <div class="flex-1"></div>
-        <button data-action="save-script" ${S.saving ? 'disabled' : ''}
+        <button id="btn-save-script" data-action="save-script" ${S.saving || !dirty ? 'disabled' : ''}
           class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-[var(--border)] text-[var(--text)] hover:bg-[var(--hover)] disabled:opacity-40">${I('save', 'w-3.5 h-3.5')} ${esc(t('common.save'))}</button>
         ${S.run?.status === 'running'
           ? `<button data-action="kill-run" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-600/90 hover:bg-red-500 text-white">${I('square', 'w-3.5 h-3.5')} ${esc(t('common.stop'))}</button>`
@@ -583,6 +584,8 @@ const App = (() => {
   function renderTab() {
     const body = $('#tab-body');
     if (!body) return;
+    // уход с вкладки меты пересобирает её форму — несохранённые правки теряются
+    if (S.tab !== 'meta' && metaDirty) setMetaDirty(false);
     if (S.tab === 'editor') {
       body.innerHTML = '<div id="editor-slot" class="flex flex-1 min-h-0"></div>';
       $('#editor-slot').appendChild(editor.el);
@@ -614,7 +617,7 @@ const App = (() => {
         <button data-action="clear-output" class="px-2.5 py-1.5 rounded-lg text-xs border border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--hover)]">${esc(t('output.clear'))}</button>
         <button data-action="copy-output" class="px-2.5 py-1.5 rounded-lg text-xs border border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--hover)] flex items-center gap-1">${I('copy', 'w-3 h-3')} ${esc(t('output.copy'))}</button>
       </div>
-      <div class="flex-1 min-h-0 overflow-y-auto rounded-xl border border-slate-800 bg-[#0a1120] p-3" id="output-scroll"></div>`;
+      <div class="flex-1 min-h-0 overflow-y-auto rounded-xl border border-slate-800 bg-[#0a1120] p-3 output-text" id="output-scroll"></div>`;
     $('#output-scroll').appendChild(outputBox);
   }
 
@@ -725,6 +728,19 @@ const App = (() => {
     };
   }
 
+  function updateSaveButton() {
+    const dirty = !!editor?.isDirty() || metaDirty;
+    const btn = $('#btn-save-script');
+    if (btn) btn.disabled = S.saving || !dirty;
+    const dot = $('#dirty-dot');
+    if (dot) dot.classList.toggle('hidden', !dirty);
+  }
+
+  function setMetaDirty(d) {
+    metaDirty = d;
+    updateSaveButton();
+  }
+
   function renderMetaTab() {
     const meta = S.doc?.meta || {};
     const groupMeta = S.doc?.groupMeta || {};
@@ -796,7 +812,6 @@ const App = (() => {
           </div>
 
           <div class="flex items-center gap-2 pt-2">
-            <button data-action="meta-save" class="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-brand-600 hover:bg-brand-500 text-white">${I('save', 'w-3.5 h-3.5')} ${esc(t('meta.saveSettings'))}</button>
             <button data-action="meta-test-ssh" class="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm border border-[var(--border)] text-[var(--text)] hover:bg-[var(--hover)]">${I('zap', 'w-3.5 h-3.5')} ${esc(t('meta.testSsh'))}</button>
             <span class="text-[11px] text-[var(--muted)]">${esc(t('meta.testFirst'))}</span>
           </div>
@@ -818,6 +833,11 @@ const App = (() => {
   }
 
   function mountMetaTab(body) {
+    // вкладка только что пересобрана из S.doc.meta — несохранённых изменений нет
+    setMetaDirty(false);
+    const onFieldChange = () => setMetaDirty(true);
+    body.addEventListener('input', onFieldChange);
+    body.addEventListener('change', onFieldChange);
     // переключение типа авторизации
     $('#m-auth', body)?.addEventListener('change', () => toggleAuthBlocks('m'));
     $('#m-inherit', body)?.addEventListener('change', (e) => {
@@ -850,13 +870,13 @@ const App = (() => {
 
   function collectMetaForm() {
     const cur = S.doc?.meta || {};
-    const ssh = readSshForm('m', cur.ssh || {});
     const args = $$('#m-args [data-arg-row]').map((row) => ({
       flag: $('[data-arg="flag"]', row).value.trim(),
       label: $('[data-arg="label"]', row).value.trim(),
       default: $('[data-arg="default"]', row).value,
       required: $('[data-arg="required"]', row).checked,
     })).filter((a) => a.flag);
+    const inheritSsh = $('#m-inherit')?.checked !== false;
     return {
       ...cur,
       title: $('#m-title').value.trim(),
@@ -865,8 +885,10 @@ const App = (() => {
       runOn: $('#m-runon').value,
       timeoutSec: Math.max(0, parseInt($('#m-timeout').value, 10) || 0),
       favorite: $('#m-favorite').checked,
-      inheritSsh: $('#m-inherit')?.checked !== false,
-      ssh,
+      inheritSsh,
+      // при наследовании форма скрипта заблокирована — не перезаписываем сохранённый блок
+      // пустыми значениями и портом по умолчанию (иначе они затрут настройки группы)
+      ssh: inheritSsh ? (cur.ssh || {}) : readSshForm('m', cur.ssh || {}),
       env: textToEnv($('#m-env').value),
       args,
     };
@@ -877,7 +899,9 @@ const App = (() => {
       const meta = collectMetaForm();
       await api.saveMeta({ group: S.activeGroup, file: S.activeScript, meta });
       S.doc.meta = meta;
+      setMetaDirty(false);
       if (!silent) toast('success', t('meta.saved'));
+      await loadScripts();
       renderList();
       renderDetail();
       return true;
@@ -973,7 +997,7 @@ const App = (() => {
           ${run.truncated ? `<span class="text-amber-400">${esc(t('output.truncated'))}</span>` : ''}
         </div>
         <div class="px-5 py-3 overflow-auto flex-1">
-          <pre class="font-mono text-[12px] leading-5 text-slate-200 whitespace-pre-wrap break-words bg-[#0a1120] border border-slate-800 rounded-xl p-3 m-0">${r2.render(run.output || t('history.emptyOutput'))}</pre>
+          <pre class="font-mono text-[12px] leading-5 text-slate-200 whitespace-pre-wrap break-words bg-[#0a1120] border border-slate-800 rounded-xl p-3 m-0 output-text">${r2.render(run.output || t('history.emptyOutput'))}</pre>
         </div>`, { width: 'max-w-3xl' });
     } catch (e) {
       toast('error', errMsg(e));
@@ -1045,10 +1069,15 @@ const App = (() => {
       <div class="px-5 py-4 overflow-y-auto space-y-4">
         <div class="grid grid-cols-2 gap-3">
           <div>
+            <label class="lbl">${esc(t('group.folder'))}</label>
+            <input id="g-folder" type="text" value="${esc(groupName)}" class="inp font-mono text-xs" />
+            <p class="text-[10px] text-[var(--muted)] mt-1">${esc(t('group.folderHint'))}</p>
+          </div>
+          <div>
             <label class="lbl">${esc(t('group.name'))}</label>
             <input id="g-title" type="text" value="${esc(gm.title || g?.title || '')}" class="inp" />
           </div>
-          <div>
+          <div class="col-span-2">
             <label class="lbl">${esc(t('group.description'))}</label>
             <input id="g-desc" type="text" value="${esc(gm.description || '')}" class="inp" />
           </div>
@@ -1091,17 +1120,26 @@ const App = (() => {
           }
         });
         $('[data-m="ok"]', el).addEventListener('click', async () => {
+          const newName = $('#g-folder', el).value.trim() || groupName;
           const meta = {
             ...gm,
-            title: $('#g-title', el).value.trim() || groupName,
+            title: $('#g-title', el).value.trim() || newName,
             description: $('#g-desc', el).value.trim(),
             ssh: readSshForm('g', gm.ssh || {}),
             env: textToEnv($('#g-env', el).value),
           };
           try {
+            // сначала мета под старым именем, потом переименование —
+            // при ошибке имени папка группы остаётся на месте
             await api.saveGroupMeta({ group: groupName, meta });
+            let renamed = false;
+            if (newName !== groupName) {
+              await api.renameGroup({ group: groupName, newName });
+              if (S.activeGroup === groupName) S.activeGroup = newName;
+              renamed = true;
+            }
             close();
-            toast('success', t('group.saved'));
+            toast('success', t(renamed ? 'group.renamed' : 'group.saved'));
             await loadGroups(true);
           } catch (e) {
             if (e.code === 'LOCKED') {
@@ -1183,8 +1221,8 @@ const App = (() => {
       return;
     }
     if (file !== S.activeScript) await selectScript(file);
-    if (editor?.isDirty()) {
-      const okSave = await saveScript(true);
+    if (editor?.isDirty() || metaDirty) {
+      const okSave = await saveAll();
       if (!okSave) return;
     }
     const meta = S.doc?.meta || {};
@@ -1404,8 +1442,18 @@ const App = (() => {
     editor.markSaved();
   }
 
+  async function saveAll() {
+    if (S.saving) return false;
+    let saved = false;
+    let ok = true;
+    if (editor?.isDirty()) { ok = (await saveScript(true)) && ok; saved = true; }
+    if (S.tab === 'meta' && metaDirty) { ok = (await saveMeta(true)) && ok; saved = true; }
+    if (saved && ok) toast('success', t('detail.scriptSaved'));
+    return ok;
+  }
+
   async function saveScript(silent = false) {
-    if (!S.activeScript || S.saving) return false;
+    if (!S.activeScript || S.saving || !editor?.isDirty()) return false;
     S.saving = true;
     try {
       await api.saveScript({ group: S.activeGroup, file: S.activeScript, content: editor.getValue() });
@@ -1442,11 +1490,8 @@ const App = (() => {
     if (!editor) {
       editor = createBashEditor({
         fontSize: S.settings.fontSize,
-        onSave: () => saveScript(),
-        onDirty: (d) => {
-          const dot = $('#dirty-dot');
-          if (dot) dot.classList.toggle('hidden', !d);
-        },
+        onSave: () => saveAll(),
+        onDirty: () => updateSaveButton(),
       });
     }
     await loadGroups();
@@ -1524,9 +1569,9 @@ const App = (() => {
         const name = await promptDialog(t('sidebar.newGroup'), '');
         if (!name) return;
         try {
-          await api.createGroup(name);
+          const res = await api.createGroup(name);
           await loadGroups();
-          S.activeGroup = name.trim();
+          S.activeGroup = res?.name || name.trim();
           await loadGroupMeta();
           await loadScripts();
           renderSidebar(); renderList(); renderDetail();
@@ -1577,7 +1622,7 @@ const App = (() => {
         } catch (err) { toast('error', errMsg(err)); }
         return;
       }
-      if (a === 'save-script') return saveScript();
+      if (a === 'save-script') return saveAll();
       if (a === 'run-script') { e.stopPropagation(); return runScript(d.file); }
       if (a === 'kill-run') { if (S.run) api.killRun(S.run.runId).catch(() => {}); return; }
       if (a === 'switch-tab') { S.tab = d.tab; renderDetail(); return; }
@@ -1593,19 +1638,25 @@ const App = (() => {
       if (a === 'meta-add-arg') {
         $('#m-args-empty')?.remove();
         $('#m-args').insertAdjacentHTML('beforeend', argRowHtml({}, Date.now()));
+        setMetaDirty(true);
         return;
       }
-      if (a === 'meta-del-arg') { tgt.closest('[data-arg-row]')?.remove(); return; }
-      if (a === 'meta-save') return saveMeta();
+      if (a === 'meta-del-arg') { tgt.closest('[data-arg-row]')?.remove(); setMetaDirty(true); return; }
       if (a === 'meta-test-ssh') return testSshFromForm();
       if (a === 'pick-key') {
         const f = await api.pickFile({});
-        if (f) $(`#${d.prefix}-keypath`).value = f;
+        if (f) {
+          $(`#${d.prefix}-keypath`).value = f;
+          if (d.prefix === 'm') setMetaDirty(true);
+        }
         return;
       }
       if (a === 'clear-hostkey') {
         const input = $(`#${d.prefix}-hostkey`);
-        if (input) input.value = '';
+        if (input) {
+          input.value = '';
+          if (d.prefix === 'm') setMetaDirty(true);
+        }
         return;
       }
       if (a === 'history-refresh') { await loadHistory(); renderTab(); return; }
@@ -1683,9 +1734,9 @@ const App = (() => {
 
   async function selectGroup(name) {
     if (S.activeGroup === name) return;
-    if (editor?.isDirty()) {
+    if (editor?.isDirty() || metaDirty) {
       const okSave = await confirmDialog(t('confirm.saveEditor'), { okText: t('common.save') });
-      if (okSave) await saveScript(true);
+      if (okSave) await saveAll();
     }
     S.activeGroup = name;
     S.activeScript = null;
@@ -1706,7 +1757,11 @@ const App = (() => {
       return toast('warn', t('error.LOCKED'));
     }
     const cur = S.doc?.meta || {};
-    const ssh = readSshForm('m', cur.ssh || {});
+    const inherit = $('#m-inherit')?.checked !== false;
+    // при наследовании тестируем SSH-доступ группы (форма скрипта заблокирована)
+    const ssh = inherit
+      ? { ...(S.doc?.groupMeta?.ssh || {}) }
+      : readSshForm('m', cur.ssh || {});
     if (!ssh.host) return toast('warn', t('sshTest.noHost'));
     try {
       toast('info', t('sshTest.testing'), 1500);
@@ -1716,6 +1771,7 @@ const App = (() => {
         if (res.newHostKey) {
           const input = $('#m-hostkey');
           if (input) input.value = res.newHostKey;
+          setMetaDirty(true);
           toast('info', t('sshTest.hostKeyObtained'), 6000);
         }
       } else {

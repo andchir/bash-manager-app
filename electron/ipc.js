@@ -135,10 +135,11 @@ async function unlockWithPassword(password) {
 
 function effectiveSsh(meta, groupMeta) {
   const groupSsh = groupMeta?.ssh || {};
-  const scriptSsh = meta?.ssh || {};
-  const merged = { ...groupSsh, ...scriptSsh };
-  if (meta?.inheritSsh === false && meta.ssh) return { ...meta.ssh };
-  return merged;
+  // наследование включено (по умолчанию): скрипт использует SSH-доступ группы;
+  // собственный блок скрипта в расчёт не берём (в UI он заблокирован)
+  if (meta?.inheritSsh !== false) return { ...groupSsh };
+  // наследование отключено — только собственный блок скрипта
+  return { ...(meta?.ssh || {}) };
 }
 
 async function persistHostKey(group, file, fp) {
@@ -146,11 +147,12 @@ async function persistHostKey(group, file, fp) {
     if (!state.rootDir) return;
     const { meta, groupMeta } = await repo.readScript(state.rootDir, group, file);
     const scriptHasSsh = !!meta?.ssh && Object.keys(meta.ssh).length > 0;
-    if (scriptHasSsh) {
+    if (scriptHasSsh && meta?.inheritSsh === false) {
       const m = meta;
       m.ssh = { ...m.ssh, hostKey: fp };
       await repo.saveMeta(state.rootDir, group, file, m);
     } else {
+      // наследование (по умолчанию) — закрепляем ключ на уровне группы
       const g = groupMeta || {};
       g.ssh = { ...(g.ssh || {}), hostKey: fp };
       await repo.saveGroupMeta(state.rootDir, group, g);
@@ -392,9 +394,11 @@ function register(win) {
     return { savedAt: new Date().toISOString() };
   });
 
-  handle('repo:createGroup', async (name) => { await repo.createGroup(requireRoot(), name); return true; });
+  handle('repo:createGroup', async (name) => repo.createGroup(requireRoot(), name));
 
   handle('repo:deleteGroup', async (name) => { await repo.deleteGroup(requireRoot(), name); return true; });
+
+  handle('repo:renameGroup', async ({ group, newName }) => repo.renameGroup(requireRoot(), group, newName));
 
   handle('repo:protectGitignore', async () => repo.protectGitignore(requireRoot()));
 

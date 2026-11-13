@@ -150,9 +150,13 @@ function assertSafeName(name) {
   }
 }
 
+function normalizeFsName(name) {
+  return String(name).trim().replace(/\s+/g, '_');
+}
+
 function normalizeScriptName(name) {
   assertSafeName(name);
-  const trimmed = name.trim();
+  const trimmed = normalizeFsName(name);
   const hasExt = SCRIPT_EXTS.includes(path.extname(trimmed).toLowerCase());
   return hasExt ? trimmed : trimmed + '.sh';
 }
@@ -231,13 +235,15 @@ async function saveGroupMeta(root, group, meta) {
 }
 
 async function createGroup(root, name) {
-  assertSafeName(name);
-  const dir = path.join(root, name.trim());
+  const dirName = normalizeFsName(name);
+  assertSafeName(dirName);
+  const dir = path.join(root, dirName);
   try {
     await fs.promises.mkdir(dir, { flag: 'wx' });
   } catch {
-    throw new RepoError('GROUP_EXISTS', `Группа уже существует: ${name}`);
+    throw new RepoError('GROUP_EXISTS', `Группа уже существует: ${dirName}`);
   }
+  return { name: dirName };
 }
 
 async function deleteGroup(root, name) {
@@ -245,6 +251,25 @@ async function deleteGroup(root, name) {
   const scripts = await listScripts(root, name);
   if (scripts.length > 0) throw new RepoError('GROUP_NOT_EMPTY', 'Группа не пуста — сначала удалите скрипты');
   await fs.promises.rmdir(path.join(root, name));
+}
+
+async function renameGroup(root, oldName, newName) {
+  await assertRoot(root);
+  assertSafeName(oldName);
+  const name = normalizeFsName(newName);
+  assertSafeName(name);
+  for (const n of [oldName, name]) {
+    if (SKIP_DIRS.has(n) || n.startsWith('.')) {
+      throw new RepoError('BAD_NAME', `Недопустимое имя: ${n}`);
+    }
+  }
+  if (name === oldName) return { name };
+  const src = path.join(root, oldName);
+  const dst = path.join(root, name);
+  if (!fs.existsSync(src)) throw new RepoError('GROUP_NOT_FOUND', `Группа не найдена: ${oldName}`);
+  if (fs.existsSync(dst)) throw new RepoError('GROUP_EXISTS', `Группа уже существует: ${name}`);
+  await fs.promises.rename(src, dst);
+  return { name };
 }
 
 /** Добавляет служебные пути в .gitignore корня (не дублируя записи). */
@@ -286,6 +311,7 @@ module.exports = {
   saveGroupMeta,
   createGroup,
   deleteGroup,
+  renameGroup,
   protectGitignore,
   assertSafeName,
 };

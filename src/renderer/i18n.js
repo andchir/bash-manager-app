@@ -212,6 +212,9 @@ const LOCALES = {
 
     'group.title': 'Group: {name}',
     'group.name': 'Group title',
+    'group.folder': 'Folder on disk',
+    'group.folderHint': 'renaming moves the folder on disk',
+    'group.renamed': 'Group renamed',
     'group.description': 'Description',
     'group.sshDefaults': 'Default SSH access',
     'group.sshDefaultsHint': 'inherited by all group scripts',
@@ -481,6 +484,9 @@ const LOCALES = {
 
     'group.title': 'Группа: {name}',
     'group.name': 'Название группы',
+    'group.folder': 'Имя папки на диске',
+    'group.folderHint': 'переименование переместит папку',
+    'group.renamed': 'Группа переименована',
     'group.description': 'Описание',
     'group.sshDefaults': 'SSH-доступ по умолчанию',
     'group.sshDefaultsHint': 'наследуют все скрипты группы',

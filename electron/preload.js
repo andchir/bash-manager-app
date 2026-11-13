@@ -54,6 +54,7 @@ const api = {
   saveGroupMeta: (payload) => call('repo:saveGroupMeta', payload),
   createGroup: (name) => call('repo:createGroup', name),
   deleteGroup: (name) => call('repo:deleteGroup', name),
+  renameGroup: (payload) => call('repo:renameGroup', payload),
   protectGitignore: () => call('repo:protectGitignore'),
 
   // запуск / история / ssh
