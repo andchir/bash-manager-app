@@ -1,0 +1,17 @@
+{
+  "id": "11111111-2222-4333-8444-555555555551",
+  "title": "Обновление системы",
+  "description": "Обновляет индексы пакетов. Требует sudo.",
+  "tags": ["серверы", "обновление"],
+  "favorite": true,
+  "runOn": "local",
+  "inheritSsh": true,
+  "ssh": {},
+  "args": [
+    { "flag": "--channel", "label": "Канал обновлений", "default": "stable", "required": false }
+  ],
+  "env": {},
+  "timeoutSec": 300,
+  "createdAt": "2026-11-13T00:00:00.000Z",
+  "updatedAt": "2026-11-13T00:00:00.000Z"
+}

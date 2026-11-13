@@ -1,0 +1,70 @@
+{
+  "name": "bash-manager",
+  "productName": "Bash Manager",
+  "version": "1.0.0",
+  "description": "Приложение для управления, редактирования и запуска Bash-скриптов локально и по SSH",
+  "author": {
+    "name": "Andrei",
+    "email": "andrei@example.com"
+  },
+  "main": "electron/main.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "smoke": "electron . --smoke",
+    "selftest": "electron . --selftest",
+    "build:css": "tailwindcss -i ./src/input.css -o ./src/renderer/tailwind.css --minify",
+    "build:css:dev": "tailwindcss -i ./src/input.css -o ./src/renderer/tailwind.css --watch",
+    "make-icon": "electron scripts/make-icon.js",
+    "pack": "electron-builder",
+    "pack:linux": "electron-builder --linux",
+    "pack:win": "electron-builder --win",
+    "test": "node test/vault.test.js && node test/repo.test.js && node test/i18n.test.js"
+  },
+  "build": {
+    "appId": "com.andrei.bashmanager",
+    "productName": "Bash Manager",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**/*",
+      "src/renderer/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Development;Utility;",
+      "icon": "build/icon.png"
+    },
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "build/icon.png",
+      "artifactName": "${productName}-${version}-${arch}-setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Bash Manager",
+      "artifactName": "${productName}-${version}-${arch}-setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-${arch}-portable.${ext}"
+    }
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.6.2",
+    "electron": "^45.3.2",
+    "electron-builder": "^26.18.0",
+    "postcss": "^8.5.32",
+    "tailwindcss": "^3.4.19"
+  },
+  "dependencies": {
+    "ssh2": "^1.17.0"
+  }
+}

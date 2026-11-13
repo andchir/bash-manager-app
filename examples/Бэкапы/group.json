@@ -1,0 +1,16 @@
+{
+  "title": "Бэкапы",
+  "description": "Скрипты резервного копирования. Запуск на удалённых серверах по SSH.",
+  "ssh": {
+    "host": "srv.example.com",
+    "port": 22,
+    "auth": "password",
+    "login": "",
+    "password": "",
+    "privateKeyPath": "",
+    "passphrase": "",
+    "hostKey": ""
+  },
+  "env": { "KEEP_DAYS": "14" },
+  "defaults": { "timeoutSec": 600 }
+}

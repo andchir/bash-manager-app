@@ -1,0 +1,23 @@
+# Зависимости
+node_modules/
+
+# Сборка и логи
+dist/
+*.log
+npm-debug.log*
+
+# ОС
+.DS_Store
+Thumbs.db
+
+# Данные приложения / секреты (НИКОГДА не коммитить)
+userData/
+*.local
+
+# Служебные данные менеджера внутри папок со скриптами (логи запусков, сессии)
+**/.bash-manager/runs/
+**/.bash-manager/*.tmp
+
+# Редакторы
+.idea/
+.vscode/

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "kdf": "scrypt",
+  "params": {
+    "N": 32768,
+    "r": 8,
+    "p": 1,
+    "keylen": 32,
+    "salt": "RWAgCeccSxqmn5QcdrC8dw=="
+  },
+  "verifier": "6hKPtYA/0Uaqtp12JCvYZA9+yMR43AJJfRn7x31UZXw=",
+  "createdAt": "2026-11-13T18:43:56.527Z"
+}

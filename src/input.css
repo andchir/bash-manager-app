@@ -1,0 +1,223 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --bg: #020617;
+  --panel: #0f172a;
+  --panel2: #1e293b;
+  --border: #1e293b;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --hover: rgba(148, 163, 184, 0.12);
+  --editor-bg: #0a1120;
+  --editor-border: #1e293b;
+  --editor-text: #e2e8f0;
+  --editor-gutter: #475569;
+  --editor-caret: #34d399;
+  --accent: #6ee7b7;
+}
+html.light {
+  color-scheme: light;
+  --bg: #f1f5f9;
+  --panel: #ffffff;
+  --panel2: #f1f5f9;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --muted: #64748b;
+  --hover: rgba(100, 116, 139, 0.12);
+  --editor-bg: #ffffff;
+  --editor-border: #e2e8f0;
+  --editor-text: #1e293b;
+  --editor-gutter: #94a3b8;
+  --editor-caret: #059669;
+  --accent: #047857;
+}
+
+/* ---------- Поля форм (.inp / .lbl) ---------- */
+.lbl {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.inp {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background-color: var(--panel2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+}
+.inp:focus {
+  border-color: #10b981;
+}
+.inp:disabled {
+  opacity: 0.5;
+}
+
+/* ---------- Кастомные чекбоксы ---------- */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin: 0;
+  position: relative;
+  border-radius: 5px;
+  border: 1.5px solid var(--muted);
+  background-color: var(--panel2);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input[type="checkbox"]:hover:not(:disabled) {
+  border-color: #10b981;
+}
+input[type="checkbox"]:active:not(:disabled) {
+  transform: scale(0.92);
+}
+input[type="checkbox"]:checked {
+  background-color: #10b981;
+  border-color: #10b981;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='5 13 10 18 19 7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 12px;
+  animation: cbx-pop 0.16s ease-out;
+}
+@keyframes cbx-pop {
+  0% { transform: scale(0.8); }
+  60% { transform: scale(1.07); }
+  100% { transform: scale(1); }
+}
+input[type="checkbox"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+}
+input[type="checkbox"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---------- Кастомные селекты ---------- */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 32px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+}
+select:hover:not(:disabled) {
+  border-color: #10b981;
+}
+select option {
+  background-color: var(--panel);
+  color: var(--text);
+}
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Скроллбары ---------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.45) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.45);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------- Подсветка синтаксиса Bash ---------- */
+.tok-comment { color: #64748b; font-style: italic; }
+.tok-shebang { color: #f59e0b; font-style: italic; }
+.tok-string  { color: #86efac; }
+.tok-var     { color: #7dd3fc; }
+.tok-keyword { color: #c4b5fd; }
+.tok-number  { color: #fca5a5; }
+.tok-fn      { color: #fbbf24; }
+html.light .tok-comment { color: #94a3b8; }
+html.light .tok-string  { color: #15803d; }
+html.light .tok-var     { color: #0369a1; }
+html.light .tok-keyword { color: #7c3aed; }
+html.light .tok-number  { color: #b91c1c; }
+html.light .tok-shebang { color: #b45309; }
+html.light .tok-fn      { color: #b45309; }
+
+/* ---------- Редактор ---------- */
+.editor-area {
+  tab-size: 4;
+  caret-color: var(--editor-caret);
+}
+.editor-area::selection {
+  background: rgba(16, 185, 129, 0.25);
+}
+
+/* ---------- Терминал вывода ---------- */
+.ansi-fg-30 { color: #4b5563; } .ansi-fg-31 { color: #f87171; }
+.ansi-fg-32 { color: #4ade80; } .ansi-fg-33 { color: #facc15; }
+.ansi-fg-34 { color: #60a5fa; } .ansi-fg-35 { color: #e879f9; }
+.ansi-fg-36 { color: #22d3ee; } .ansi-fg-37 { color: #e5e7eb; }
+.ansi-fg-90 { color: #6b7280; } .ansi-fg-91 { color: #fca5a5; }
+.ansi-fg-92 { color: #86efac; } .ansi-fg-93 { color: #fde047; }
+.ansi-fg-94 { color: #93c5fd; } .ansi-fg-95 { color: #f0abfc; }
+.ansi-fg-96 { color: #67e8f9; } .ansi-fg-97 { color: #ffffff; }
+.ansi-bold { font-weight: 700; }
+.ansi-dim { opacity: 0.65; }
+.ansi-underline { text-decoration: underline; }
+
+#group-select-row { display: none; }
+#btn-back { display: none; }
+
+/* ---------- Адаптивность при маленьком окне ---------- */
+@media (max-width: 940px) {
+  #sidebar { display: none !important; }
+  #group-select-row { display: flex !important; }
+  #listpane { width: 16rem; }
+}
+@media (max-width: 680px) {
+  #listpane { width: 100%; border-right: 0; }
+  #btn-back { display: inline-flex !important; }
+  body:not([data-pane="detail"]) #detail { display: none !important; }
+  body[data-pane="detail"] #listpane { display: none !important; }
+}
+
+/* ---------- Анимации ---------- */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+.anim-fade-in { animation: fade-in 0.18s ease-out; }
+.anim-slide-in { animation: slide-in-right 0.22s ease-out; }
+.anim-pop-in { animation: pop-in 0.16s ease-out; }
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.anim-pulse-dot { animation: pulse-dot 1.1s ease-in-out infinite; }

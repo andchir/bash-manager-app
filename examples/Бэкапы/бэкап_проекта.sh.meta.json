@@ -1,0 +1,17 @@
+{
+  "id": "11111111-2222-4333-8444-555555555553",
+  "title": "Бэкап проекта",
+  "description": "Архивирует каталог на удалённом сервере в /tmp. Запускается по SSH.",
+  "tags": ["бэкап", "архив"],
+  "favorite": true,
+  "runOn": "remote",
+  "inheritSsh": true,
+  "ssh": {},
+  "args": [
+    { "flag": "--dir", "label": "Каталог для архивации", "default": "/etc", "required": true }
+  ],
+  "env": { "KEEP_DAYS": "7" },
+  "timeoutSec": 600,
+  "createdAt": "2026-11-13T00:00:00.000Z",
+  "updatedAt": "2026-11-13T00:00:00.000Z"
+}
