@@ -28,7 +28,7 @@ npm run build:css  # собрать стили (один раз; tailwind.css у
 npm start          # запустить приложение
 ```
 
-Сборка установочных пакетов (Linux: AppImage/deb, Windows: NSIS/portable) описана в [BUILD.md](BUILD.md).
+Сборка установочных пакетов (Linux: AppImage/deb, Windows: NSIS/portable) описана в [BUILD.md](docs/BUILD.md).
 
 При первом запуске:
 1. **Выберите папку** со скриптами (или скопируйте `examples/` куда-нибудь и укажите её).
