@@ -151,7 +151,80 @@ async function run(win) {
     const wb = saved.windowBounds || {};
     ok('window-bounds-saved', wb.width === 520 && wb.height === 380 && wb.maximized === false, JSON.stringify(wb));
 
-    console.log('SELFTEST_PASS', JSON.stringify({ steps: result.steps.length + 5 }));
+    // --- UI-шаги: перезагрузка страницы, затем реальные клики по интерфейсу ---
+    const loaded = new Promise((res) => win.webContents.once('did-finish-load', res));
+    await win.webContents.executeJavaScript('location.reload()').catch(() => {});
+    await loaded;
+    await sleep(1200); // boot + рендер главного экрана
+
+    const SCRIPT_UI = `(async () => {
+      const api = window.api;
+      const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+      const results = [];
+      const step = (n) => results.push(n);
+
+      step('ui-main-rendered');
+      if (!document.querySelector('[data-action="new-group"]')) throw new Error('main UI not rendered');
+
+      step('ui-new-group');
+      document.querySelector('[data-action="new-group"]').click();
+      await sleep(250);
+      const inp = document.getElementById('prompt-input');
+      if (!inp) throw new Error('prompt modal did not open (new-group broken?)');
+      inp.value = 'Группа-UI';
+      document.querySelector('#modal-root [data-m="ok"]').click();
+      await sleep(700);
+      const groups = await api.listGroups();
+      if (!groups.some((g) => g.name === 'Группа-UI')) throw new Error('group not created via UI');
+
+      step('ui-select-group');
+      const gItem = document.querySelector('[data-action="select-group"][data-group="Интеграция"]');
+      if (!gItem) throw new Error('sidebar group item not found');
+      gItem.click();
+      await sleep(400);
+
+      step('ui-delete-script');
+      const delBtn = document.querySelector('[data-action="delete-script"]');
+      if (!delBtn) throw new Error('delete button not found');
+      delBtn.click();
+      await sleep(250);
+      const okBtn = document.querySelector('#modal-root [data-m="ok"]');
+      if (!okBtn) throw new Error('confirm modal did not open (delete-script broken?)');
+      okBtn.click();
+      await sleep(700);
+      const scripts = await api.listScripts('Интеграция');
+      if (scripts.length !== 0) throw new Error('script not deleted via UI, left: ' + scripts.length);
+
+      step('ui-edit-group');
+      const editBtn = document.querySelector('#sidebar [data-action="edit-group"][data-group="Интеграция"]');
+      if (!editBtn) throw new Error('edit-group button not found');
+      editBtn.click();
+      await sleep(300);
+      if (!document.getElementById('g-title')) throw new Error('group modal did not open (edit-group broken?)');
+      document.querySelector('#modal-root [data-m="cancel"]')?.click();
+      await sleep(200);
+
+      step('ui-delete-group');
+      const delG = document.querySelector('[data-action="delete-group"][data-group="Интеграция"]');
+      if (!delG) throw new Error('delete-group button not found');
+      delG.click();
+      await sleep(250);
+      const okG = document.querySelector('#modal-root [data-m="ok"]');
+      if (!okG) throw new Error('confirm modal did not open (delete-group broken?)');
+      okG.click();
+      await sleep(700);
+      const groups2 = await api.listGroups();
+      if (groups2.some((g) => g.name === 'Интеграция')) throw new Error('group not deleted via UI');
+
+      return { steps: results };
+    })()`;
+    const ui = await win.webContents.executeJavaScript(SCRIPT_UI, true);
+    ok('ui-new-group', ui.steps.includes('ui-new-group'));
+    ok('ui-delete-script', ui.steps.includes('ui-delete-script'));
+    ok('ui-edit-group', ui.steps.includes('ui-edit-group'));
+    ok('ui-delete-group', ui.steps.includes('ui-delete-group'));
+
+    console.log('SELFTEST_PASS', JSON.stringify({ steps: result.steps.length + 9 }));
     return true;
   } catch (e) {
     console.error('SELFTEST_FAIL:', e.message);

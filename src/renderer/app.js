@@ -504,10 +504,16 @@ const App = (() => {
           <button data-action="new-group" title="${esc(t('sidebar.newGroup'))}" class="p-1.5 rounded-lg text-[var(--muted)] hover:text-[var(--accent)] flex-none">${I('plus', 'w-4 h-4')}</button>
           ${S.activeGroup ? `<button data-action="edit-group" data-group="${esc(S.activeGroup)}" title="${esc(t('sidebar.editGroup'))}" class="p-1.5 rounded-lg text-[var(--muted)] hover:text-[var(--text)] flex-none">${I('settings', 'w-4 h-4')}</button>` : ''}
         </div>
-        <div class="flex items-center gap-2">
-          <h2 class="text-sm font-semibold text-[var(--text)] truncate flex-1" title="${esc(S.activeGroup || '')}">${esc(groupTitle())}</h2>
-          <button data-action="new-script" title="${esc(t('list.newScript'))}" class="p-1.5 rounded-lg text-[var(--accent)] hover:bg-brand-500/15">${I('plus', 'w-4 h-4')}</button>
+        <div class="flex items-center gap-1">
+          <h2 class="text-sm font-semibold text-[var(--text)] truncate" title="${esc(S.activeGroup || '')}">${esc(groupTitle())}</h2>
+          ${S.activeGroup ? `
+          <button data-action="edit-group" data-group="${esc(S.activeGroup)}" title="${esc(t('sidebar.editGroup'))}"
+            class="p-1.5 rounded-lg text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--hover)]">${I('settings', 'w-3.5 h-3.5')}</button>
+          <button data-action="delete-group" data-group="${esc(S.activeGroup)}" title="${esc(t('group.delete'))}"
+            class="p-1.5 rounded-lg text-[var(--muted)] hover:text-red-400 hover:bg-red-500/10">${I('trash', 'w-3.5 h-3.5')}</button>
+          ` : ''}
         </div>
+        <button data-action="new-script" title="${esc(t('list.newScript'))}" class="p-1.5 rounded-lg text-[var(--accent)] hover:bg-brand-500/15">${I('plus', 'w-4 h-4')}</button>
         <div class="relative">
           <span class="absolute left-2.5 top-2 text-[var(--muted)]">${I('search', 'w-3.5 h-3.5')}</span>
           <input id="search" type="text" value="${esc(S.search)}" placeholder="${esc(t('list.searchPlaceholder'))}"
@@ -1470,10 +1476,10 @@ const App = (() => {
         modalClose.closest('.fixed')?.remove();
         return;
       }
-      const t = e.target.closest('[data-action]');
-      if (!t) return;
-      const a = t.dataset.action;
-      const d = t.dataset;
+      const tgt = e.target.closest('[data-action]');
+      if (!tgt) return;
+      const a = tgt.dataset.action;
+      const d = tgt.dataset;
 
       if (a === 'choose-root') return chooseRoot();
       if (a === 'set-root') {
@@ -1528,6 +1534,18 @@ const App = (() => {
         return;
       }
       if (a === 'edit-group') { e.stopPropagation(); return editGroupModal(d.group); }
+      if (a === 'delete-group') {
+        e.stopPropagation();
+        const okDel = await confirmDialog(esc(t('group.deleteConfirm', { name: d.group })), { danger: true, okText: t('common.delete') });
+        if (!okDel) return;
+        try {
+          await api.deleteGroup(d.group);
+          toast('success', t('group.deleted'));
+          if (S.activeGroup === d.group) { S.activeGroup = null; S.activeScript = null; S.doc = null; }
+          await loadGroups();
+        } catch (err) { toast('error', errMsg(err)); }
+        return;
+      }
       if (a === 'new-script') return newScriptModal();
       if (a === 'select-script') return selectScript(d.file);
       if (a === 'toggle-fav') {
@@ -1577,7 +1595,7 @@ const App = (() => {
         $('#m-args').insertAdjacentHTML('beforeend', argRowHtml({}, Date.now()));
         return;
       }
-      if (a === 'meta-del-arg') { t.closest('[data-arg-row]')?.remove(); return; }
+      if (a === 'meta-del-arg') { tgt.closest('[data-arg-row]')?.remove(); return; }
       if (a === 'meta-save') return saveMeta();
       if (a === 'meta-test-ssh') return testSshFromForm();
       if (a === 'pick-key') {

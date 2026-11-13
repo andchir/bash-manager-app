@@ -108,7 +108,10 @@ async function bootstrap() {
 
   if (SELFTEST) {
     const { run } = require('./selftest');
+    let selftestDone = false;
     win.webContents.on('did-finish-load', async () => {
+      if (selftestDone) return; // защита от повторного запуска после location.reload()
+      selftestDone = true;
       const passed = await run(win);
       app.exit(passed ? 0 : 1);
     });
