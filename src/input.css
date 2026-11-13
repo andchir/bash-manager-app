@@ -166,6 +166,10 @@ html.light .tok-fn      { color: #b45309; }
   tab-size: 4;
   caret-color: var(--editor-caret);
 }
+.hl,
+.gutter {
+  tab-size: 4;
+}
 .editor-area::selection {
   background: rgba(16, 185, 129, 0.25);
 }

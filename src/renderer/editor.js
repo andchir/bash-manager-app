@@ -93,10 +93,15 @@
       hl.innerHTML = highlightBash(value) + '\n';
       hl.scrollTop = ta.scrollTop;
       gutter.scrollTop = ta.scrollTop;
+      // Критично: одинаковые метрики строк у textarea, подсветки и gutter,
+      // иначе курсор и клики не совпадают с видимым текстом.
+      const lh = Math.round(fontSize * 1.6) + 'px';
       ta.style.fontSize = fontSize + 'px';
       hl.style.fontSize = fontSize + 'px';
       gutter.style.fontSize = fontSize + 'px';
-      ta.style.lineHeight = '1.5em';
+      ta.style.lineHeight = lh;
+      hl.style.lineHeight = lh;
+      gutter.style.lineHeight = lh;
     }
 
     ta.addEventListener('input', () => {
